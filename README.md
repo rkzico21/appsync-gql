@@ -1,1 +1,1 @@
-# serverless-gql
+# appsync-gql
