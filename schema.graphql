@@ -1,0 +1,38 @@
+type Item {
+	id: String!
+	title: String!
+}
+
+type Story {
+	id: String!
+	title: String!
+}
+
+
+type Mutation {
+	# Create a Strory
+	createStory(
+		id: String!
+		title: String!
+	): Story!
+
+	createItem(
+		id: String!
+		title: String!
+	): Item!
+
+	addItemsToStory(
+		storyId: String!
+		items: [String]!
+	) : Story!
+}
+
+type Query {
+	helloWorld(consumer_key: String, consumer_secret: String): String!
+	getStories(consumer_key: String, consumer_secret: String): [Story]!
+}
+
+schema {
+	query: Query
+	mutation: Mutation
+}
