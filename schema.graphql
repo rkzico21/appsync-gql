@@ -6,7 +6,9 @@ type Item {
 type Story {
 	id: String!
 	title: String!
+	items: [Item]!
 }
+
 
 
 type Mutation {
@@ -23,13 +25,14 @@ type Mutation {
 
 	addItemsToStory(
 		storyId: String!
-		items: [String]!
+		itemIds: [String]!
 	) : Story!
 }
 
 type Query {
 	helloWorld(consumer_key: String, consumer_secret: String): String!
 	getStories(consumer_key: String, consumer_secret: String): [Story]!
+	getItems(itemIds: [String]!, consumer_key: String, consumer_secret: String): [Item]!
 }
 
 schema {

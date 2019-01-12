@@ -12,6 +12,8 @@ provider:
 functions:
   graphql:
     handler: handler.graphql
+  addItemsToStory:
+    handler: addItemsToStory.handler
 
 custom:
   accountId: 021764565112
@@ -21,7 +23,7 @@ custom:
     userPoolConfig:
       awsRegion:  us-west-1
       defaultAction: ALLOW
-      userPoolId: us-east-1_COxB95pK4 
+      userPoolId:  us-east-1_YucIGGiHp 
     mappingTemplates:
       - dataSource: awsLambdaDataSource
         type: Query #Query, Mutation, Subscription
@@ -38,16 +40,43 @@ custom:
         field: getStories
         request: "getStories-request-mapping-template.txt"
         response: "getStories-response-mapping-template.txt"
-      - dataSource: storyDataSource
+      - type: Story
+        field: items
+        request: "getStoryItems-request.txt"
+        response: "getStoryItems-response.txt"
+        kind: PIPELINE
+        functions:
+          - getStory
+          - getItemsFromId
+      #- dataSource: storyDataSource
+      #  type: Mutation
+      #  field: addItemsToStory
+      #  request: "addItemsToStory-request-mapping-template.txt"
+      #  response: "addItemsToStory-response-mapping-template.txt"
+      - dataSource: addItemsToStoryLambdaDataSource
         type: Mutation
         field: addItemsToStory
         request: "addItemsToStory-request-mapping-template.txt"
         response: "addItemsToStory-response-mapping-template.txt"
       - dataSource: itemDataSource
+        type: Query
+        field: getItems
+        request: "getItems-request-mapping-template.txt"
+        response: "getItems-response-mapping-template.txt"
+      - dataSource: itemDataSource
         type: Mutation
         field: createItem
         request: "createItem-request-mapping-template.txt"
         response: "createItem-response-mapping-template.txt"
+    functionConfigurations:
+      - dataSource: storyDataSource
+        name: getStory
+        request: "function-getStory-request.txt"
+        response: "function-getStory-response.txt"
+      - dataSource: itemDataSource
+        name: getItemsFromId
+        request: "function-getItems-request.txt"
+        response: "function-getItems-response.txt"
     schema: # defaults schema.graphql
     serviceRole: "AppSyncServiceRole"
     dataSources:
@@ -56,6 +85,12 @@ custom:
         description: 'Lambda DataSource'
         config:
           lambdaFunctionArn: { Fn::GetAtt: [GraphqlLambdaFunction, Arn] } # Where GraphqlLambdaFunction is the lambda function cloudformation resource created by serverless for the serverless function named graphql
+          serviceRoleArn: { Fn::GetAtt: [AppSyncLambdaServiceRole, Arn] }
+      - type: AWS_LAMBDA
+        name: addItemsToStoryLambdaDataSource
+        description: 'Lambda DataSource'
+        config:
+          lambdaFunctionArn: { Fn::GetAtt: [AddItemsToStoryLambdaFunction, Arn] } # Where GraphqlLambdaFunction is the lambda function cloudformation resource created by serverless for the serverless function named graphql
           serviceRoleArn: { Fn::GetAtt: [AppSyncLambdaServiceRole, Arn] }
       - type: AMAZON_DYNAMODB
         name: storyDataSource
@@ -221,6 +256,8 @@ resources:
                   Resource:
                     - "arn:aws:lambda:us-west-1:021764565112:function:${self:service}-dev-graphql"
                     - "arn:aws:lambda:us-west-1:021764565112:function:${self:service}-dev-graphql:*"
+                    - "arn:aws:lambda:us-west-1:021764565112:function:${self:service}-dev-addItemsToStory"
+                    - "arn:aws:lambda:us-west-1:021764565112:function:${self:service}-dev-addItemsToStory:*"
     AppSyncDynamoServiceRole:
       Type: "AWS::IAM::Role"
       Properties:
@@ -246,6 +283,7 @@ resources:
                   Action:
                     - "dynamodb:Query"
                     - "dynamodb:BatchWriteItem"
+                    - "dynamodb:BatchGetItem"
                     - "dynamodb:GetItem"
                     - "dynamodb:DeleteItem"
                     - "dynamodb:PutItem"

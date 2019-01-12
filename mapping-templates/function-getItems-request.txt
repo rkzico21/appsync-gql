@@ -1,0 +1,15 @@
+#set($keys = [])
+#foreach($id in $context.prev.result.items)
+    $util.qr($keys.add({"id": {"S": "$id"}}))    
+#end
+{
+    "version" : "2018-05-29",
+    "operation" : "BatchGetItem",
+    "tables" : {
+        "items": {
+            "keys":$util.toJson($keys),
+            "consistentRead": false
+        }
+        
+    }
+}
